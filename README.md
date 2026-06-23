@@ -3,7 +3,7 @@
 > Run one `SKILL.md` on multiple agent platforms — see where they diverge.
 
 [![CI](https://github.com/suifeng156/skillport/actions/workflows/ci.yml/badge.svg)](https://github.com/suifeng156/skillport/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/skillport.svg)](https://www.npmjs.com/package/skillport)
+[![npm](https://img.shields.io/npm/v/@lbf-fff/skillport.svg)](https://www.npmjs.com/package/@lbf-fff/skillport)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 The [Agent Skills](https://agentskills.io) standard is open. Your `SKILL.md` is portable to 30+ agent products in theory. In practice nobody tests whether it actually behaves the same way on Claude Code, Codex, Cursor, Antigravity — and the answer is often "no."
@@ -38,8 +38,10 @@ A skill is "portable" if every agent that supports the spec loads it the same wa
 ## Install
 
 ```bash
-npm install -g skillport
+npm install -g @lbf-fff/skillport
 ```
+
+(The CLI command is still `skillport` — only the install path is scoped.)
 
 You also need the platform CLIs you want to test against:
 
@@ -124,7 +126,7 @@ skillport test ./my-skill --task "…" --threshold 0.75
 If you'd rather call it from your own tooling:
 
 ```ts
-import { loadSkill, runAcrossPlatforms, compareResults, getAdapters } from 'skillport';
+import { loadSkill, runAcrossPlatforms, compareResults, getAdapters } from '@lbf-fff/skillport';
 
 const skill = await loadSkill('./my-skill');
 const adapters = getAdapters(['claude-code', 'codex']);

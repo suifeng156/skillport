@@ -1,7 +1,10 @@
 {
-  "name": "skillport",
+  "name": "@lbf-fff/skillport",
   "version": "0.1.1",
   "description": "Cross-platform compatibility tester for Agent Skills. Run one SKILL.md on Claude Code, Codex (and more) — see where they diverge.",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "bin": {
     "skillport": "dist/cli.js"
