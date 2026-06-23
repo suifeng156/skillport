@@ -4,14 +4,15 @@
   "description": "Cross-platform compatibility tester for Agent Skills. Run one SKILL.md on Claude Code, Codex (and more) — see where they diverge.",
   "type": "module",
   "bin": {
-    "skillport": "./dist/cli.js"
+    "skillport": "dist/cli.js"
   },
   "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc",
     "dev": "tsx src/cli.ts",
     "test": "vitest run",
     "lint": "tsc --noEmit",
