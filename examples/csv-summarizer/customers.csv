@@ -1,0 +1,13 @@
+id,name,email,signup_date,plan,monthly_spend
+1,Ada Lovelace,ada@analyt.example,2024-03-12,pro,49.00
+2,Alan Turing,alan@bletchley.example,2024-04-02,pro,49.00
+3,Grace Hopper,grace@navy.example,2024-04-19,enterprise,499.00
+4,Linus Torvalds,linus@kernel.example,2024-05-01,free,0.00
+5,Margaret Hamilton,margaret@apollo.example,not-a-date,pro,49.00
+6,Edsger Dijkstra,,2024-05-22,pro,49.00
+7,Donald Knuth,don@taocp.example,2024-06-03,enterprise,499.00
+8,Barbara Liskov,barbara@mit.example,2024-06-19,pro,49.00
+9,John Carmack,john@id.example,2024-07-04,free,0.00
+10,Tim Berners-Lee,tim@w3.example,2024-08-15,enterprise,499.00
+11,Anders Hejlsberg,anders@ms.example,2024-09-01,pro,4900.00
+12,Anders Hejlsberg,anders@ms.example,2024-09-01,pro,49.00

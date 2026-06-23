@@ -1,0 +1,1 @@
+Summarize customers.csv in this directory and report any data quality issues.
