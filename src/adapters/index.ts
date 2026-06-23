@@ -2,12 +2,11 @@ import type { PlatformId } from '../types.js';
 import type { Adapter } from './base.js';
 import { claudeCodeAdapter } from './claude-code.js';
 import { codexAdapter } from './codex.js';
-import { geminiCliAdapter } from './gemini-cli.js';
 
 export { CliAdapter } from './base.js';
 export type { Adapter } from './base.js';
 
-const ALL: Adapter[] = [claudeCodeAdapter, codexAdapter, geminiCliAdapter];
+const ALL: Adapter[] = [claudeCodeAdapter, codexAdapter];
 
 export function getAdapters(ids?: PlatformId[]): Adapter[] {
   if (!ids || ids.length === 0) return ALL;

@@ -60,7 +60,7 @@ describe('detectActivation', () => {
 
   it('does not activate on unrelated output', () => {
     expect(
-      detectActivation(mkResult('gemini-cli', 'I cannot help with that request.'), skill)
+      detectActivation(mkResult('codex', 'I cannot help with that request.'), skill)
     ).toBe(false);
   });
 });
@@ -79,7 +79,7 @@ describe('compareResults', () => {
   it('flags not-activated when skill did not load', async () => {
     const results: RunResult[] = [
       mkResult('claude-code', 'csv-summarizer: 12 rows', { activated: true }),
-      mkResult('gemini-cli', 'I cannot do that.', { activated: false }),
+      mkResult('codex', 'I cannot do that.', { activated: false }),
     ];
     const cmp = await compareResults(results, { skill, baseline: 'claude-code' });
     expect(cmp[0].verdict).toBe('not-activated');

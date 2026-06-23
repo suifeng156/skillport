@@ -1,12 +1,12 @@
 # skillport
 
-> Run one `SKILL.md` on Claude Code, Codex, and Gemini CLI — see where they diverge.
+> Run one `SKILL.md` on multiple agent platforms — see where they diverge.
 
 [![CI](https://github.com/suifeng156/skillport/actions/workflows/ci.yml/badge.svg)](https://github.com/suifeng156/skillport/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/skillport.svg)](https://www.npmjs.com/package/skillport)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-The [Agent Skills](https://agentskills.io) standard is open. Your `SKILL.md` is portable to 30+ agent products in theory. In practice nobody tests whether it actually behaves the same way on Claude Code, Codex, Cursor, Gemini CLI, Windsurf — and the answer is often "no."
+The [Agent Skills](https://agentskills.io) standard is open. Your `SKILL.md` is portable to 30+ agent products in theory. In practice nobody tests whether it actually behaves the same way on Claude Code, Codex, Cursor, Antigravity — and the answer is often "no."
 
 `skillport` is a CLI that runs one skill on multiple agent platforms with the same task and tells you, with numbers, where they diverge.
 
@@ -22,10 +22,9 @@ $ skillport test ./examples/csv-summarizer \
   ├─────────────┼───────────┼────────────┼─────────────────────┼──────────┤
   │ claude-code │     ✓     │     —      │ baseline            │   4.2s   │
   │ codex       │     ✓     │    0.91    │ compatible          │   6.1s   │
-  │ gemini-cli  │     ✗     │     —      │ skill not activated │   5.7s   │
   └─────────────┴───────────┴────────────┴─────────────────────┴──────────┘
 
-  ⚠ 1 platform(s) diverged. Run with --verbose to inspect outputs.
+  ✓ All platforms compatible.
 ```
 
 Exit code is `0` when every platform passes, `1` when any diverges — drop it into CI to gate skill releases.
@@ -44,13 +43,15 @@ npm install -g skillport
 
 You also need the platform CLIs you want to test against:
 
-| Platform        | CLI to install                                                                   | Adapter status |
-| --------------- | -------------------------------------------------------------------------------- | -------------- |
-| Claude Code     | [code.claude.com/docs](https://code.claude.com/docs/en/quickstart)               | ✓ supported    |
-| OpenAI Codex    | `npm i -g @openai/codex`                                                         | ✓ supported    |
-| Gemini CLI      | [google-gemini/gemini-cli](https://github.com/google-gemini/gemini-cli)          | ✓ supported    |
-| Cursor          | Cursor Agent CLI                                                                 | 🚧 v0.2        |
-| Windsurf        | Windsurf CLI                                                                     | 🚧 v0.2        |
+| Platform                | CLI to install                                                                   | Adapter status |
+| ----------------------- | -------------------------------------------------------------------------------- | -------------- |
+| Claude Code             | [code.claude.com/docs](https://code.claude.com/docs/en/quickstart)               | ✓ supported    |
+| OpenAI Codex            | `npm i -g @openai/codex`                                                         | ✓ supported    |
+| Google Antigravity CLI  | `curl -fsSL https://antigravity.google/cli/install.sh \| bash`                   | 🚧 v0.2        |
+| Cursor                  | Cursor Agent CLI                                                                 | 🚧 v0.2        |
+| Windsurf                | Windsurf CLI                                                                     | 🚧 v0.2        |
+
+**Why no Gemini CLI?** Google [deprecated Gemini CLI on 2026-06-18](https://developers.googleblog.com/an-important-update-transitioning-gemini-cli-to-antigravity-cli/) in favor of Antigravity CLI. Antigravity inherits SKILL.md support, but its skill-loading paths (`~/.gemini/antigravity-cli/skills/`) are global-only — skillport's per-run sandbox model needs project-scoped support to avoid clobbering your real skills. Adapter is deferred to v0.2 once a project-scoped path is verified.
 
 Cursor and Windsurf are IDE-first and don't have stable headless invocation in v0.1 — adapters are planned for v0.2 once their non-interactive modes stabilize.
 
@@ -90,14 +91,12 @@ Override platform CLI binaries when they're not on `PATH` under standard names:
 ```bash
 SKILLPORT_CLAUDE_CODE_BIN=/opt/anthropic/claude
 SKILLPORT_CODEX_BIN=/opt/openai/codex
-SKILLPORT_GEMINI_CLI_BIN=/opt/google/gemini
 ```
 
 Override CLI invocation flags (e.g. for new Codex versions that change the subcommand):
 
 ```bash
 SKILLPORT_CODEX_ARGS="run --no-stream"     # instead of the default 'exec'
-SKILLPORT_GEMINI_CLI_ARGS="ask"            # instead of the default '-p'
 ```
 
 For semantic similarity instead of structural:
@@ -115,8 +114,8 @@ skillport test ./my-skill --task "…" --threshold 0.75
 
 ## Roadmap
 
-- v0.1 — Claude Code, Codex, Gemini CLI; structural and embedding similarity; CI-friendly exit codes ✅
-- v0.2 — Cursor + Windsurf adapters; richer activation heuristics; HTML report
+- v0.1 — Claude Code, Codex; structural and embedding similarity; CI-friendly exit codes ✅
+- v0.2 — Antigravity CLI, Cursor, Windsurf adapters; richer activation heuristics; HTML report
 - v0.3 — `skillport bench` — run a battery of tasks per skill and emit a compatibility scorecard
 - v0.4 — Hosted leaderboard for popular skills (`skillport.dev/leaderboard`)
 

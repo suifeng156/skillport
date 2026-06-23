@@ -1,7 +1,7 @@
 {
   "name": "skillport",
-  "version": "0.1.0",
-  "description": "Cross-platform compatibility tester for Agent Skills. Run one SKILL.md on Claude Code, Codex, and Gemini CLI — see where they diverge.",
+  "version": "0.1.1",
+  "description": "Cross-platform compatibility tester for Agent Skills. Run one SKILL.md on Claude Code, Codex (and more) — see where they diverge.",
   "type": "module",
   "bin": {
     "skillport": "./dist/cli.js"
@@ -50,8 +50,8 @@
     "skill-md",
     "claude-code",
     "codex",
+    "antigravity",
     "cursor",
-    "gemini-cli",
     "windsurf",
     "testing",
     "compatibility",

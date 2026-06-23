@@ -9,14 +9,12 @@ import { runAcrossPlatforms } from './runner.js';
 import { loadSkill } from './skill-loader.js';
 import type { PlatformId, Report } from './types.js';
 
-const VERSION = '0.1.0';
-
 const program = new Command();
 
 program
   .name('skillport')
   .description('Cross-platform compatibility tester for Agent Skills.')
-  .version(VERSION);
+  .version('0.1.1');
 
 program
   .command('test')

@@ -14,7 +14,7 @@ export interface Skill {
 export type PlatformId =
   | 'claude-code'
   | 'codex'
-  | 'gemini-cli'
+  | 'antigravity'
   | 'cursor'
   | 'windsurf';
 
