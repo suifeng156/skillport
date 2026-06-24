@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { compareResults, detectActivation, structuralSimilarity } from '../src/compare.js';
+import {
+  compareResults,
+  detectActivation,
+  extractActivationMarkers,
+  structuralSimilarity,
+} from '../src/compare.js';
 import type { RunResult, Skill } from '../src/types.js';
 
 const skill: Skill = {
@@ -42,14 +47,38 @@ describe('structuralSimilarity', () => {
   });
 });
 
+describe('extractActivationMarkers', () => {
+  it('extracts backtick-quoted format strings that mention the skill name', () => {
+    const s: Skill = {
+      ...skill,
+      body: 'Output a header: `csv-summarizer: <filename> (N rows × M columns)`.',
+    };
+    const markers = extractActivationMarkers(s);
+    expect(markers).toContain('csv-summarizer:');
+  });
+
+  it('returns empty array when skill body has no name-prefixed markers', () => {
+    const s: Skill = { ...skill, body: 'No format strings here, just prose.' };
+    expect(extractActivationMarkers(s)).toEqual([]);
+  });
+
+  it('deduplicates markers', () => {
+    const s: Skill = {
+      ...skill,
+      body: '`csv-summarizer: <a>` and later `csv-summarizer: <b>` and `csv-summarizer: <c>`',
+    };
+    expect(extractActivationMarkers(s)).toEqual(['csv-summarizer:']);
+  });
+});
+
 describe('detectActivation', () => {
-  it('activates when the skill name appears in output', () => {
+  it('activates when the skill name appears in output (no markers)', () => {
     expect(
       detectActivation(mkResult('claude-code', 'csv-summarizer: customers.csv (12 rows)'), skill)
     ).toBe(true);
   });
 
-  it('activates when distinctive description keywords appear', () => {
+  it('activates when distinctive description keywords appear (no markers)', () => {
     expect(
       detectActivation(
         mkResult('codex', 'Here is the summary of your CSV with row counts and quality flags.'),
@@ -58,9 +87,31 @@ describe('detectActivation', () => {
     ).toBe(true);
   });
 
-  it('does not activate on unrelated output', () => {
+  it('does not activate on unrelated output (no markers)', () => {
     expect(
       detectActivation(mkResult('codex', 'I cannot help with that request.'), skill)
+    ).toBe(false);
+  });
+
+  it('prefers markers when given: activates only on marker match', () => {
+    const markers = ['csv-summarizer:'];
+    expect(
+      detectActivation(
+        mkResult('codex', 'csv-summarizer: customers.csv (12 rows × 6 columns)'),
+        skill,
+        markers
+      )
+    ).toBe(true);
+  });
+
+  it('does NOT activate on keyword match alone when markers are required', () => {
+    const markers = ['csv-summarizer:'];
+    expect(
+      detectActivation(
+        mkResult('codex', 'Here is a generic summary about CSV data quality issues.'),
+        skill,
+        markers
+      )
     ).toBe(false);
   });
 });

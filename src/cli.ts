@@ -1,9 +1,12 @@
 #!/usr/bin/env node
+import { writeFile } from 'node:fs/promises';
+import path from 'node:path';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import ora from 'ora';
 import { getAdapters, listSupportedPlatforms } from './adapters/index.js';
 import { compareResults } from './compare.js';
+import { renderHtmlReport } from './html-report.js';
 import { renderReport } from './report.js';
 import { runAcrossPlatforms } from './runner.js';
 import { loadSkill } from './skill-loader.js';
@@ -14,7 +17,7 @@ const program = new Command();
 program
   .name('skillport')
   .description('Cross-platform compatibility tester for Agent Skills.')
-  .version('0.1.1');
+  .version('0.2.0');
 
 program
   .command('test')
@@ -30,6 +33,7 @@ program
   .option('--embeddings', 'use OpenAI embeddings for similarity (needs OPENAI_API_KEY)', false)
   .option('--threshold <n>', 'compatibility threshold (0..1)', '')
   .option('--json', 'emit JSON instead of pretty report', false)
+  .option('--html <path>', 'also write a standalone HTML report to <path>', '')
   .option('-v, --verbose', 'show full per-platform outputs', false)
   .action(async (skillDir: string, opts: TestOptions) => {
     try {
@@ -83,6 +87,12 @@ program
         }
       }
 
+      if (opts.html) {
+        const out = path.resolve(opts.html);
+        await writeFile(out, renderHtmlReport(report), 'utf8');
+        if (!opts.json) console.log(chalk.gray(`  HTML report written to ${out}\n`));
+      }
+
       const diverged = comparisons.some((c) => c.verdict !== 'compatible');
       process.exit(diverged ? 1 : 0);
     } catch (err) {
@@ -117,6 +127,7 @@ interface TestOptions {
   embeddings: boolean;
   threshold: string;
   json: boolean;
+  html: string;
   verbose: boolean;
 }
 

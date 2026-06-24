@@ -2,7 +2,7 @@ import os from 'node:os';
 import path from 'node:path';
 import fs from 'fs-extra';
 import type { Adapter } from './adapters/base.js';
-import { detectActivation } from './compare.js';
+import { detectActivation, extractActivationMarkers } from './compare.js';
 import type { RunResult, Skill } from './types.js';
 
 export interface RunAcrossOptions {
@@ -17,8 +17,9 @@ export async function runAcrossPlatforms(
   adapters: Adapter[],
   options: RunAcrossOptions
 ): Promise<RunResult[]> {
+  const markers = extractActivationMarkers(skill);
   return Promise.all(
-    adapters.map(async (adapter) => runOne(adapter, skill, task, options))
+    adapters.map(async (adapter) => runOne(adapter, skill, task, options, markers))
   );
 }
 
@@ -26,7 +27,8 @@ async function runOne(
   adapter: Adapter,
   skill: Skill,
   task: string,
-  options: RunAcrossOptions
+  options: RunAcrossOptions,
+  markers: string[]
 ): Promise<RunResult> {
   const emit = (s: Parameters<NonNullable<RunAcrossOptions['onStatus']>>[1]) =>
     options.onStatus?.(adapter.id, s);
@@ -56,7 +58,7 @@ async function runOne(
       cwd: sandbox,
       timeoutMs: options.timeoutMs,
     });
-    result.activated = detectActivation(result, skill);
+    result.activated = detectActivation(result, skill, markers);
     emit(result.invoked ? 'done' : 'error');
     return result;
   } finally {

@@ -58,8 +58,26 @@ export async function compareResults(
   );
 }
 
-export function detectActivation(result: RunResult, skill: Skill): boolean {
+export function extractActivationMarkers(skill: Skill): string[] {
+  const markers: string[] = [];
+  const name = escapeRegExp(skill.name);
+  const re = new RegExp('`([^`\\n]*' + name + '[^`\\n]*)`', 'gi');
+  for (const match of skill.body.matchAll(re)) {
+    const literal = match[1].split(/[<{]/)[0].trim();
+    if (literal.length >= 4) markers.push(literal);
+  }
+  return Array.from(new Set(markers));
+}
+
+export function detectActivation(
+  result: RunResult,
+  skill: Skill,
+  markers?: string[]
+): boolean {
   if (!result.invoked || !result.output) return false;
+  if (markers && markers.length > 0) {
+    return markers.some((m) => result.output.includes(m));
+  }
   const out = result.output.toLowerCase();
   if (out.includes(skill.name.toLowerCase())) return true;
   const keywords = uniqueKeywords(skill.description);
@@ -67,6 +85,10 @@ export function detectActivation(result: RunResult, skill: Skill): boolean {
   const hits = keywords.filter((k) => out.includes(k)).length;
   const required = Math.min(3, Math.max(1, Math.floor(keywords.length / 4)));
   return hits >= required;
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function uniqueKeywords(text: string): string[] {

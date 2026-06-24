@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented here. Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.0] - 2026-06-24
+
+### Added
+- **Cursor adapter** (`cursor-agent -p <task>`, installs to `.cursor/skills/<name>/`). Project-scoped install confirmed against [Cursor docs](https://cursor.com/docs/cli/using).
+- **Antigravity adapter** (`agy -p <task>`, installs to `.agents/skills/<name>/`). Project-scoped install via the `.agents/` portable convention, confirmed against [Google docs](https://medium.com/google-cloud/configuring-mcp-servers-and-skills-for-antigravity-cli-and-ide-a938c7eebb78). Reinstates support after the v0.1.1 removal of `gemini-cli`.
+- **Marker-based activation detection.** `extractActivationMarkers(skill)` walks the SKILL.md body and pulls out backtick-quoted output formats that mention the skill's name (e.g. `` `csv-summarizer: <filename> (N rows × M columns)` `` → marker `csv-summarizer:`). When markers exist, activation requires a literal match in the agent's output — kills the false-positive that v0.1's keyword heuristic produced on generic answers. Falls back to keyword detection when no markers exist.
+- **HTML report** via `--html <path>`. Self-contained file (no external CSS / fonts), dark / light auto, collapsible per-platform outputs. Safe against HTML injection in skill names, tasks, or platform output.
+- New env vars: `SKILLPORT_CURSOR_BIN`, `SKILLPORT_CURSOR_ARGS`, `SKILLPORT_ANTIGRAVITY_BIN`, `SKILLPORT_ANTIGRAVITY_ARGS`.
+
+### Notes
+- **Windsurf** is intentionally absent. Codeium's Windsurf was acquired by Cognition and rebranded to Devin Desktop on 2026-06-02; legacy Cascade is end-of-life 2026-07-01. Adapter is parked until Devin's non-interactive CLI mode stabilizes.
+
 ## [0.1.1] - 2026-06-23
 
 ### Removed
