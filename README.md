@@ -66,19 +66,20 @@ All four adapters install your skill into the platform's project-scoped skills d
 # 1. Check which platforms are installed and ready
 skillport platforms
 
-# 2. Run the bundled example
+# 2. Run a single task
 skillport test ./examples/csv-summarizer \
   --task "$(cat ./examples/csv-summarizer/task.txt)"
 
-# 3. Run on your own skill, JSON output for CI
-skillport test ./my-skill \
-  --task "Whatever your skill expects" \
-  --json > skillport-report.json
+# 3. Run a full bench (many tasks, scorecard)
+skillport bench ./examples/csv-summarizer/bench.yaml
 
-# 4. Generate a shareable HTML report
-skillport test ./my-skill \
-  --task "..." \
-  --html ./report.html
+# 4. Machine-readable output for CI
+skillport test ./my-skill --task "..." --json > report.json
+skillport bench bench.yaml --json > scorecard.json
+
+# 5. Shareable reports
+skillport test  ./my-skill   --task "..."  --html ./report.html
+skillport bench ./bench.yaml --html ./scorecard.html --markdown ./scorecard.md
 ```
 
 ## How it works
@@ -94,6 +95,81 @@ For each platform `skillport`:
 7. **Renders** a colored CLI table by default. Pass `--html report.html` for a self-contained HTML report (dark/light auto, collapsible outputs) or `--json` for machine-readable output.
 
 The whole thing is parallel across platforms.
+
+## Bench: a scorecard across many tasks
+
+Single-task `test` is good for ad-hoc debugging. For confidence that a skill is *actually* portable, run a **bench** — a YAML file declaring a battery of tasks with pass / fail markers — across every platform you care about.
+
+```bash
+skillport bench ./examples/csv-summarizer/bench.yaml
+```
+
+```
+  Bench: csv-summarizer-bench  (4 tasks × 2 platforms)
+  Skill: csv-summarizer
+  Baseline: claude-code
+
+  ┌──────────────────────┬─────────────────┬─────────────────┐
+  │ Task                 │ claude-code     │ codex           │
+  ├──────────────────────┼─────────────────┼─────────────────┤
+  │ full-protocol        │ ✓ 3/3 (B)       │ ✓ 3/3 0.94      │
+  │ detect-missing-email │ ✓ 2/2 (B)       │ ✗ 1/2 0.81      │
+  │ detect-bad-date      │ ✓ 2/2 (B)       │ ✓ 2/2 0.89      │
+  │ detect-duplicate     │ ✓ 2/2 (B)       │ ✗ 1/2 0.72      │
+  └──────────────────────┴─────────────────┴─────────────────┘
+
+  Scorecard
+  ┌─────────────┬───────────┬─────────────┬───────────┬───────────┬───────────┐
+  │ Platform    │ Activated │ Marker Cov. │ Task Pass │ Mean Sim. │ Composite │
+  ├─────────────┼───────────┼─────────────┼───────────┼───────────┼───────────┤
+  │ claude-code │      100% │        100% │      100% │     —     │   100%    │
+  │ codex       │      100% │         78% │       50% │    0.84   │    75%    │
+  └─────────────┴───────────┴─────────────┴───────────┴───────────┴───────────┘
+```
+
+A task **passes** when it was invoked, every `expected_markers` string is in the output, and zero `unexpected_markers` strings appear. Per platform, skillport aggregates:
+
+| Metric            | Definition                                                       |
+| ----------------- | ---------------------------------------------------------------- |
+| Activated rate    | fraction of tasks where the skill loaded                         |
+| Marker coverage   | overall hit rate across all expected markers                     |
+| Task pass rate    | fraction of tasks that fully passed                              |
+| Mean similarity   | average structural / embedding similarity vs baseline             |
+| **Composite**     | `(activated + task pass) / 2` — the single number to compare on  |
+
+### Bench file format
+
+```yaml
+# bench.yaml
+name: my-bench
+description: One line about what this bench proves
+skill: ./relative/path/to/skill   # or absolute
+platforms: [claude-code, codex]   # optional; CLI default if omitted
+baseline: claude-code             # optional; first platform if omitted
+default_timeout_ms: 240000
+thresholds:
+  composite: 0.7                  # exit 1 if any platform falls below
+tasks:
+  - id: kebab-case-id
+    description: Optional one-liner
+    task: |
+      Multiline task prompt the agent sees, verbatim.
+    expected_markers: ["must appear", "in output"]
+    unexpected_markers: ["must NOT appear"]
+    timeout_ms: 60000             # per-task override
+```
+
+See [`examples/csv-summarizer/bench.yaml`](examples/csv-summarizer/bench.yaml) for a real bench that exercises a CSV summarizer against three data-quality traps (missing field, malformed date, near-duplicate row).
+
+### CI integration
+
+```bash
+# In your CI step: exit 1 if any platform composite < 0.7
+skillport bench bench.yaml --threshold 0.7
+
+# Or write a scorecard a bot can post as a PR comment:
+skillport bench bench.yaml --markdown ./bench-report.md
+```
 
 ## Configuration
 
@@ -131,8 +207,8 @@ skillport test ./my-skill --task "…" --threshold 0.75
 
 - v0.1 — Claude Code + Codex adapters; structural and embedding similarity; CI-friendly exit codes ✅
 - v0.2 — Cursor + Antigravity adapters; marker-based activation detection; HTML report ✅
-- v0.3 — `skillport bench`: run a battery of tasks per skill and emit a compatibility scorecard
-- v0.4 — Hosted leaderboard for popular skills (`skillport.dev/leaderboard`)
+- v0.3 — `skillport bench`: multi-task scorecard with CLI / JSON / Markdown / HTML output ✅
+- v0.4 — Hosted leaderboard for popular skills (`skillport.dev/leaderboard`); persistent bench runs over time
 - v?.? — Devin Desktop (ex-Windsurf) adapter once its non-interactive CLI mode stabilizes
 
 ## Library usage
@@ -140,12 +216,22 @@ skillport test ./my-skill --task "…" --threshold 0.75
 If you'd rather call it from your own tooling:
 
 ```ts
-import { loadSkill, runAcrossPlatforms, compareResults, getAdapters } from '@lbf-fff/skillport';
+import {
+  loadSkill, runAcrossPlatforms, compareResults, getAdapters,
+  loadBench, runBench, computeScorecard, renderBenchMarkdown,
+} from '@lbf-fff/skillport';
 
+// Single task
 const skill = await loadSkill('./my-skill');
 const adapters = getAdapters(['claude-code', 'codex']);
 const results = await runAcrossPlatforms(skill, 'do the thing', adapters, { timeoutMs: 120000 });
 const comparisons = await compareResults(results, { skill, baseline: 'claude-code' });
+
+// Bench
+const bench = await loadBench('./bench.yaml');
+const taskResults = await runBench(bench, skill, adapters, 'claude-code');
+const scorecard = computeScorecard(taskResults, 'claude-code');
+const md = renderBenchMarkdown({ bench, skill, baseline: 'claude-code', taskResults, platformScores: scorecard, generatedAt: new Date().toISOString() });
 ```
 
 ## Contributing

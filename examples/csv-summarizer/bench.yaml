@@ -1,0 +1,56 @@
+name: csv-summarizer-bench
+description: |
+  Verify csv-summarizer works on the bundled customers.csv across platforms.
+  customers.csv is hand-crafted with three data-quality traps — missing email
+  (row 6), malformed date (row 5), and a near-duplicate row (rows 11/12).
+  A correct implementation of the skill catches all three.
+
+skill: .                        # SKILL.md lives in the same dir as this bench
+
+baseline: claude-code
+
+default_timeout_ms: 240000
+
+thresholds:
+  composite: 0.5                # exit 1 if any platform falls below this
+
+tasks:
+  - id: full-protocol
+    description: Skill should produce its full required output (header + table + Data quality paragraph)
+    task: |
+      Summarize customers.csv inside .claude/skills/csv-summarizer/ using your
+      csv-summarizer protocol exactly. Output the required header line, the
+      columns table, and the Data quality paragraph.
+    expected_markers:
+      - "csv-summarizer: customers.csv"
+      - "12 rows"
+      - "Data quality"
+
+  - id: detect-missing-email
+    description: Skill must call out the missing email in row 6 (Dijkstra)
+    task: |
+      Summarize customers.csv inside .claude/skills/csv-summarizer/ and pay
+      special attention to the email column. Use your csv-summarizer protocol.
+    expected_markers:
+      - "Dijkstra"
+      - "missing"
+
+  - id: detect-bad-date
+    description: Skill must flag the malformed date in row 5 (Hamilton, "not-a-date")
+    task: |
+      Summarize customers.csv inside .claude/skills/csv-summarizer/ using your
+      csv-summarizer protocol. Pay attention to the signup_date column.
+    expected_markers:
+      - "Hamilton"
+      - "not-a-date"
+
+  - id: detect-duplicate
+    description: Skill must flag the near-duplicate Hejlsberg rows (11 and 12)
+    task: |
+      Summarize customers.csv inside .claude/skills/csv-summarizer/ using your
+      csv-summarizer protocol. Flag any duplicate or near-duplicate rows.
+    expected_markers:
+      - "Hejlsberg"
+      - "duplicate"
+    unexpected_markers:
+      - "no duplicates"

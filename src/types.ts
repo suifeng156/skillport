@@ -62,3 +62,80 @@ export interface RunOptions {
   timeoutMs: number;
   env?: Record<string, string>;
 }
+
+// ─── bench ────────────────────────────────────────────────────────────
+
+export interface BenchTask {
+  id: string;
+  description?: string;
+  task: string;
+  /** Strings that MUST appear in the agent's output for the task to count as passed. */
+  expectedMarkers?: string[];
+  /** Strings that MUST NOT appear in the agent's output. */
+  unexpectedMarkers?: string[];
+  /** Per-task timeout override (ms). Falls back to the bench default, then to 180000. */
+  timeoutMs?: number;
+}
+
+export interface BenchThresholds {
+  /** Minimum composite score [0..1] required per platform; below = exit 1. */
+  composite?: number;
+  /** Minimum activation rate [0..1] required per platform. */
+  activationRate?: number;
+  /** Minimum task pass rate [0..1] required per platform. */
+  taskPassRate?: number;
+}
+
+export interface Bench {
+  /** Absolute path to the loaded bench file (for error messages). */
+  path: string;
+  name: string;
+  description?: string;
+  /** Absolute path to the skill directory. */
+  skillPath: string;
+  /** If set, restricts the bench to these platforms (else CLI default). */
+  platforms?: PlatformId[];
+  /** Platform used as the comparison baseline. */
+  baseline?: PlatformId;
+  defaultTimeoutMs?: number;
+  thresholds?: BenchThresholds;
+  tasks: BenchTask[];
+}
+
+export interface BenchTaskResult {
+  taskId: string;
+  platform: PlatformId;
+  invoked: boolean;
+  activated: boolean;
+  output: string;
+  durationMs: number;
+  expectedMarkersHit: number;
+  expectedMarkersTotal: number;
+  unexpectedMarkersHit: number;
+  unexpectedMarkersTotal: number;
+  /** True when expected markers fully hit AND zero unexpected markers hit. */
+  passed: boolean;
+  /** Cosine/Jaccard similarity vs baseline run of the same task. null when not comparable. */
+  similarityToBaseline: number | null;
+  error?: string;
+}
+
+export interface PlatformScore {
+  platform: PlatformId;
+  taskCount: number;
+  activationRate: number;
+  taskPassRate: number;
+  markerCoverage: number;
+  meanSimilarity: number | null;
+  /** (activationRate + taskPassRate) / 2 — marker coverage and similarity reported separately. */
+  composite: number;
+}
+
+export interface BenchReport {
+  bench: Bench;
+  skill: Skill;
+  baseline: PlatformId;
+  taskResults: BenchTaskResult[];
+  platformScores: PlatformScore[];
+  generatedAt: string;
+}

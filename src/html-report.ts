@@ -7,7 +7,7 @@ export function renderHtmlReport(report: Report): string {
 <meta charset="utf-8">
 <title>skillport: ${escapeHtml(report.skill.name)}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-${CSS}
+${HTML_CSS}
 </head>
 <body>
 <main>
@@ -107,7 +107,7 @@ function verdictClass(v: Verdict): string {
   }
 }
 
-function escapeHtml(s: string): string {
+export function escapeHtml(s: string): string {
   return s
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -116,7 +116,7 @@ function escapeHtml(s: string): string {
     .replace(/'/g, '&#39;');
 }
 
-const CSS = `<style>
+export const HTML_CSS = `<style>
   :root {
     --bg: #0e1116;
     --panel: #161b22;

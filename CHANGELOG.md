@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented here. Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.3.0] - 2026-06-25
+
+### Added
+- **`skillport bench <file>` subcommand.** Runs a YAML-declared battery of tasks across every selected platform and produces a per-platform scorecard.
+- **Bench file format** (YAML) with `name`, `skill`, optional `platforms` / `baseline` / `default_timeout_ms` / `thresholds`, and a `tasks[]` array. Each task: `id` (unique kebab-case), `task` (the prompt), optional `expected_markers` (must appear in output), `unexpected_markers` (must not appear), `timeout_ms`. Schema validated at load with friendly errors.
+- **Scoring.** Per platform: `activationRate`, `markerCoverage`, `taskPassRate`, `meanSimilarity` (vs baseline), and a `composite = (activationRate + taskPassRate) / 2`. Marker coverage is shown but excluded from composite to avoid being gamed by long marker lists with many partial hits.
+- **Four output formats** for `bench`: pretty CLI table (default), `--json` (CI), `--markdown <path>` (PR comments, `-` for stdout), `--html <path>` (self-contained, reuses the `test` HTML stylesheet).
+- **CI-shaped exit codes for bench.** `--threshold <n>` exits 1 when any platform's composite is below `<n>`; alternatively, set `thresholds.composite` (and / or `activation_rate`, `task_pass_rate`) in the bench file itself.
+- **Bundled bench example.** `examples/csv-summarizer/bench.yaml` declares four tasks against the included `customers.csv`, exercising three real data-quality traps the skill should catch (missing email, malformed date, near-duplicate row).
+- Library API: `loadBench`, `runBench`, `computeScorecard`, `renderBenchCli`, `renderBenchMarkdown`, `renderBenchHtml`.
+
+### Changed
+- Internal: `HTML_CSS` and `escapeHtml` are now exported from `html-report.ts` so the bench HTML renderer can reuse them without duplication.
+
+### Tests
+- 44 tests (was 23). New: `bench-loader.test.ts` (10), `bench-scorecard.test.ts` (7), `bench-render.test.ts` (4).
+
 ## [0.2.0] - 2026-06-24
 
 ### Added
